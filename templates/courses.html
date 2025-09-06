@@ -6,7 +6,6 @@ endblock %} {% block content %}
 </div>
 
 <div class="grid grid-cols-1 grid-cols-3 gap-6 mb-5">
-  <!-- Search and Filters -->
   <div class="card">
     <div class="card-header">
       <h2><i class="bi bi-funnel"></i> Filtros de Búsqueda</h2>
@@ -53,7 +52,6 @@ endblock %} {% block content %}
     </div>
   </div>
 
-  <!-- Statistics -->
   <div class="card stats-card">
     <div class="card-body text-center">
       <div class="stats-icon">
@@ -75,7 +73,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Courses Grid -->
 <div class="card">
   <div class="card-header">
     <h2><i class="bi bi-grid"></i> Cursos Disponibles</h2>
@@ -87,7 +84,6 @@ endblock %} {% block content %}
     </div>
 
     <div id="coursesGrid" class="courses-grid">
-      <!-- Courses will be loaded here -->
     </div>
 
     <div id="noCourses" class="text-center hidden">
@@ -100,7 +96,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Course Detail Modal -->
 <div id="courseModal" class="modal hidden">
   <div class="modal-content">
     <div class="modal-header">
@@ -110,7 +105,6 @@ endblock %} {% block content %}
       </button>
     </div>
     <div class="modal-body" id="courseModalBody">
-      <!-- Course details will be loaded here -->
     </div>
   </div>
 </div>
@@ -364,7 +358,6 @@ endblock %} {% block content %}
   let allCourses = [];
   let filteredCourses = [];
 
-  // Load all courses
   async function loadCourses() {
     showCoursesLoading();
 
@@ -390,7 +383,6 @@ endblock %} {% block content %}
     }
   }
 
-  // Display courses
   function displayCourses(courses) {
     const grid = document.getElementById('coursesGrid');
 
@@ -473,13 +465,11 @@ endblock %} {% block content %}
     document.getElementById('noCourses').classList.add('hidden');
   }
 
-  // Display no courses message
   function displayNoCourses() {
     document.getElementById('coursesGrid').classList.add('hidden');
     document.getElementById('noCourses').classList.remove('hidden');
   }
 
-  // Show/hide loading
   function showCoursesLoading() {
     document.getElementById('coursesLoading').classList.remove('hidden');
     document.getElementById('coursesGrid').classList.add('hidden');
@@ -490,7 +480,6 @@ endblock %} {% block content %}
     document.getElementById('coursesLoading').classList.add('hidden');
   }
 
-  // Update statistics
   function updateStatistics() {
     const totalCourses = allCourses.length;
     const availableCourses = allCourses.filter(
@@ -501,7 +490,6 @@ endblock %} {% block content %}
     document.getElementById('availableCourses').textContent = availableCourses;
   }
 
-  // Populate instructor filter
   function populateInstructorFilter() {
     const instructors = [
       ...new Set(allCourses.map((course) => course.instructor)),
@@ -518,7 +506,6 @@ endblock %} {% block content %}
         .join('');
   }
 
-  // Apply filters
   function applyFilters() {
     const searchTerm = document
       .getElementById('searchCourses')
@@ -554,7 +541,6 @@ endblock %} {% block content %}
     displayCourses(filteredCourses);
   }
 
-  // Clear filters
   function clearFilters() {
     document.getElementById('searchCourses').value = '';
     document.getElementById('filterInstructor').value = '';
@@ -563,9 +549,7 @@ endblock %} {% block content %}
     displayCourses(filteredCourses);
   }
 
-  // View course details
   async function viewCourse(courseCode) {
-    // Prevent accidental calls
     if (!courseCode) {
       console.warn('viewCourse called without courseCode');
       return;
@@ -656,15 +640,12 @@ endblock %} {% block content %}
     }
   }
 
-  // Close course modal
   function closeCourseModal() {
     const modal = document.getElementById('courseModal');
     modal.classList.add('hidden');
-    // Clear modal content to prevent issues
     document.getElementById('courseModalBody').innerHTML = '';
   }
 
-  // Close modal when clicking outside
   document
     .getElementById('courseModal')
     .addEventListener('click', function (e) {
@@ -673,7 +654,6 @@ endblock %} {% block content %}
       }
     });
 
-  // Search on enter
   document
     .getElementById('searchCourses')
     .addEventListener('keypress', function (e) {
@@ -682,24 +662,19 @@ endblock %} {% block content %}
       }
     });
 
-  // Initialize page
   function initializePage() {
-    // Ensure modal is hidden and clear any content
     const modal = document.getElementById('courseModal');
     modal.classList.add('hidden');
     document.getElementById('courseModalBody').innerHTML = '';
 
-    // Debug: log modal state
     console.log(
       'Modal initialized as hidden:',
       modal.classList.contains('hidden'),
     );
 
-    // Load courses
     loadCourses();
   }
 
-  // Load courses on page load
   document.addEventListener('DOMContentLoaded', function () {
     initializePage();
   });

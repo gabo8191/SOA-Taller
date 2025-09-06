@@ -1,34 +1,24 @@
-"""
-Courses Service - SOA Implementation
-Independent service for managing course information
-"""
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
 from memory_storage import courses_storage, recalculate_course_slots
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create Flask app
 app = Flask(__name__)
 CORS(app)
 
-# Sample data is automatically initialized in memory_storage module
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
     return jsonify({'status': 'OK', 'service': 'Courses Service'}), 200
 
 @app.route('/courses', methods=['GET'])
 def list_courses():
-    """List all available courses"""
     try:
-        # Recalculate slots to ensure accuracy
         recalculate_course_slots()
-        
+
         courses_list = courses_storage.get_all()
 
         logger.info(f"Courses query - {len(courses_list)} courses available")
@@ -45,7 +35,6 @@ def list_courses():
 
 @app.route('/courses/<string:course_code>', methods=['GET'])
 def get_course(course_code):
-    """Get detailed course information by code"""
     try:
         course_code = course_code.upper()
         course = courses_storage.get_by_code(course_code)
@@ -63,7 +52,6 @@ def get_course(course_code):
 
 @app.route('/courses/available', methods=['GET'])
 def list_available_courses():
-    """List only courses with available slots"""
     try:
         all_courses = courses_storage.get_all()
         available_courses = [course for course in all_courses if course['available_slots'] > 0]
@@ -82,7 +70,6 @@ def list_available_courses():
 
 @app.route('/courses/<string:course_code>/reserve-slot', methods=['PUT'])
 def reserve_slot(course_code):
-    """Reserve a slot in a course (used by enrollment service)"""
     try:
         course_code = course_code.upper()
 
@@ -104,7 +91,6 @@ def reserve_slot(course_code):
 
 @app.route('/courses/<string:course_code>/release-slot', methods=['PUT'])
 def release_slot(course_code):
-    """Release a slot in a course (used when enrollment is cancelled)"""
     try:
         course_code = course_code.upper()
 
@@ -126,10 +112,8 @@ def release_slot(course_code):
 
 @app.route('/courses/instructor/<string:instructor>', methods=['GET'])
 def get_courses_by_instructor(instructor):
-    """List courses by instructor"""
     try:
         all_courses = courses_storage.get_all()
-        # Filter courses by instructor (case insensitive)
         instructor_courses = [
             course for course in all_courses
             if instructor.lower() in course['instructor'].lower()

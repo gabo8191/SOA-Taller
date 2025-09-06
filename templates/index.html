@@ -9,7 +9,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Services Overview -->
 <div class="grid grid-cols-1 grid-cols-3 gap-6 mb-5">
   <div class="card service-card">
     <div class="card-body text-center">
@@ -91,7 +90,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- System Statistics -->
 <div class="grid grid-cols-1 grid-cols-3 gap-6 mb-5">
   <div class="card stats-card">
     <div class="card-body text-center">
@@ -256,10 +254,8 @@ endblock %} {% block content %}
 </style>
 {% endblock %} {% block scripts %}
 <script>
-  // Load system statistics
   async function loadStatistics() {
     try {
-      // Load students count
       const studentsResponse = await fetch('/api/students');
       if (studentsResponse.ok) {
         const studentsData = await studentsResponse.json();
@@ -267,7 +263,6 @@ endblock %} {% block content %}
           studentsData.total || 0;
       }
 
-      // Load courses count
       const coursesResponse = await fetch('/api/courses');
       if (coursesResponse.ok) {
         const coursesData = await coursesResponse.json();
@@ -275,7 +270,6 @@ endblock %} {% block content %}
           coursesData.total || 0;
       }
 
-      // Load enrollments count
       const enrollmentsResponse = await fetch('/api/enrollments');
       if (enrollmentsResponse.ok) {
         const enrollmentsData = await enrollmentsResponse.json();
@@ -290,7 +284,6 @@ endblock %} {% block content %}
     }
   }
 
-  // Load statistics on page load
   document.addEventListener('DOMContentLoaded', loadStatistics);
 </script>
 {% endblock %}

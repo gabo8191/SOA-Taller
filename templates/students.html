@@ -6,7 +6,6 @@ endblock %} {% block content %}
 </div>
 
 <div class="grid grid-cols-1 grid-cols-2 gap-6 mb-5">
-  <!-- Registration Form -->
   <div class="card">
     <div class="card-header">
       <h2><i class="bi bi-person-plus"></i> Registrar Nuevo Estudiante</h2>
@@ -76,7 +75,6 @@ endblock %} {% block content %}
     </div>
   </div>
 
-  <!-- Search Section -->
   <div class="card">
     <div class="card-header">
       <h2><i class="bi bi-search"></i> Buscar Estudiante</h2>
@@ -117,7 +115,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Students List -->
 <div class="card">
   <div class="card-header">
     <h2><i class="bi bi-list"></i> Lista de Estudiantes</h2>
@@ -142,7 +139,6 @@ endblock %} {% block content %}
           </tr>
         </thead>
         <tbody id="studentsTableBody">
-          <!-- Students will be loaded here -->
         </tbody>
       </table>
     </div>
@@ -160,7 +156,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Student Detail Modal -->
 <div id="studentModal" class="modal hidden" style="display: none">
   <div class="modal-content">
     <div class="modal-header">
@@ -170,7 +165,6 @@ endblock %} {% block content %}
       </button>
     </div>
     <div class="modal-body" id="studentModalBody">
-      <!-- Student details will be loaded here -->
     </div>
   </div>
 </div>
@@ -296,7 +290,6 @@ endblock %} {% block content %}
 <script>
   let studentsData = [];
 
-  // Form submission
   document
     .getElementById('studentForm')
     .addEventListener('submit', async function (e) {
@@ -341,7 +334,6 @@ endblock %} {% block content %}
       }
     });
 
-  // Load all students
   async function loadAllStudents() {
     showStudentsLoading();
 
@@ -365,7 +357,6 @@ endblock %} {% block content %}
     }
   }
 
-  // Search students
   async function searchStudents() {
     const searchTerm = document.getElementById('searchInput').value.trim();
 
@@ -377,7 +368,6 @@ endblock %} {% block content %}
     showStudentsLoading();
 
     try {
-      // Filter from loaded data or make API call
       const filteredStudents = studentsData.filter(
         (student) =>
           student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -393,7 +383,6 @@ endblock %} {% block content %}
     }
   }
 
-  // Display students in table
   function displayStudents(students) {
     const tbody = document.getElementById('studentsTableBody');
 
@@ -428,13 +417,11 @@ endblock %} {% block content %}
     document.getElementById('noStudents').classList.add('hidden');
   }
 
-  // Display no students message
   function displayNoStudents() {
     document.getElementById('studentsTable').classList.add('hidden');
     document.getElementById('noStudents').classList.remove('hidden');
   }
 
-  // Show/hide loading
   function showStudentsLoading() {
     document.getElementById('studentsLoading').classList.remove('hidden');
     document.getElementById('studentsTable').classList.add('hidden');
@@ -445,12 +432,10 @@ endblock %} {% block content %}
     document.getElementById('studentsLoading').classList.add('hidden');
   }
 
-  // Update students count
   function updateStudentsCount(count) {
     document.getElementById('totalStudents').textContent = count;
   }
 
-  // View student details
   async function viewStudent(studentId) {
     try {
       const response = await fetch(`/api/students/${studentId}`);
@@ -495,14 +480,12 @@ endblock %} {% block content %}
     }
   }
 
-  // Close modal
   function closeModal() {
     const modal = document.getElementById('studentModal');
     modal.classList.add('hidden');
     modal.style.display = 'none';
   }
 
-  // Utility function to format date
   function formatDate(dateString) {
     if (!dateString) return 'No disponible';
     const date = new Date(dateString);
@@ -513,7 +496,6 @@ endblock %} {% block content %}
     });
   }
 
-  // Close modal when clicking outside
   document
     .getElementById('studentModal')
     .addEventListener('click', function (e) {
@@ -522,12 +504,10 @@ endblock %} {% block content %}
       }
     });
 
-  // Load students on page load
   document.addEventListener('DOMContentLoaded', function () {
     loadAllStudents();
   });
 
-  // Enter key search
   document
     .getElementById('searchInput')
     .addEventListener('keypress', function (e) {

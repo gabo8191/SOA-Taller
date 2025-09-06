@@ -6,7 +6,6 @@ endblock %} {% block content %}
 </div>
 
 <div class="grid grid-cols-1 grid-cols-2 gap-6 mb-5">
-  <!-- Nueva Matrícula -->
   <div class="card">
     <div class="card-header">
       <h2><i class="bi bi-plus-circle"></i> Nueva Matrícula</h2>
@@ -44,7 +43,6 @@ endblock %} {% block content %}
     </div>
   </div>
 
-  <!-- Estadísticas -->
   <div class="card">
     <div class="card-header">
       <h2><i class="bi bi-bar-chart"></i> Estadísticas</h2>
@@ -60,7 +58,6 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Lista de Matrículas -->
 <div class="card">
   <div class="card-header">
     <div class="flex justify-between items-center">
@@ -90,7 +87,6 @@ endblock %} {% block content %}
           </tr>
         </thead>
         <tbody id="enrollmentsTableBody">
-          <!-- Matrículas se cargarán aquí -->
         </tbody>
       </table>
     </div>
@@ -159,7 +155,6 @@ endblock %} {% block content %}
 <script>
   let allEnrollments = [];
 
-  // Envío del formulario
   document
     .getElementById('enrollmentForm')
     .addEventListener('submit', async function (e) {
@@ -202,7 +197,6 @@ endblock %} {% block content %}
       }
     });
 
-  // Cargar todas las matrículas
   async function loadAllEnrollments() {
     showEnrollmentsLoading();
 
@@ -226,7 +220,6 @@ endblock %} {% block content %}
     }
   }
 
-  // Mostrar matrículas en tabla
   function displayEnrollments(enrollments) {
     const tbody = document.getElementById('enrollmentsTableBody');
 
@@ -281,13 +274,11 @@ endblock %} {% block content %}
     document.getElementById('noEnrollments').classList.add('hidden');
   }
 
-  // Mostrar mensaje de no matrículas
   function displayNoEnrollments() {
     document.getElementById('enrollmentsTable').classList.add('hidden');
     document.getElementById('noEnrollments').classList.remove('hidden');
   }
 
-  // Mostrar/ocultar carga
   function showEnrollmentsLoading() {
     document.getElementById('enrollmentsLoading').classList.remove('hidden');
     document.getElementById('enrollmentsTable').classList.add('hidden');
@@ -298,7 +289,6 @@ endblock %} {% block content %}
     document.getElementById('enrollmentsLoading').classList.add('hidden');
   }
 
-  // Actualizar estadísticas
   function updateStatistics() {
     const activeEnrollments = allEnrollments.filter(
       (e) => e.status === 'ACTIVE',
@@ -306,7 +296,6 @@ endblock %} {% block content %}
     document.getElementById('totalEnrollments').textContent = activeEnrollments;
   }
 
-  // Ver detalles de matrícula
   function viewEnrollment(enrollmentId) {
     const enrollment = allEnrollments.find((e) => e.id === enrollmentId);
     if (!enrollment) return;
@@ -322,7 +311,6 @@ endblock %} {% block content %}
     alert(details);
   }
 
-  // Formatear fecha
   function formatDate(dateString) {
     if (!dateString) return 'No disponible';
     const date = new Date(dateString);
@@ -333,7 +321,6 @@ endblock %} {% block content %}
     });
   }
 
-  // Cargar datos al cargar la página
   document.addEventListener('DOMContentLoaded', function () {
     loadAllEnrollments();
   });

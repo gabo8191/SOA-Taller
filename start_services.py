@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Script to start all SOA services
-"""
 import subprocess
 import sys
 import time
@@ -10,7 +7,7 @@ from typing import List, Optional
 
 
 class ServiceManager:
-    """SOA Services Manager"""
+
 
     def __init__(self):
         self.processes: List[subprocess.Popen] = []
@@ -38,7 +35,6 @@ class ServiceManager:
         ]
 
     def start_service(self, service: dict) -> Optional[subprocess.Popen]:
-        """Start an individual service"""
         print(f"🚀 Starting {service['name']} on port {service['port']}...")
 
         try:
@@ -46,7 +42,6 @@ class ServiceManager:
                 sys.executable, service['script']
             ])
 
-            # Give time for service to start
             time.sleep(3)
 
             if process.poll() is None:
@@ -61,7 +56,6 @@ class ServiceManager:
             return None
 
     def start_all_services(self):
-        """Start all services"""
         print("🎓 Starting SOA Academic Information System")
         print("=" * 60)
 
@@ -81,7 +75,6 @@ class ServiceManager:
             sys.exit(1)
 
     def print_service_urls(self):
-        """Print service URLs"""
         print("\n🌐 Service URLs:")
         print("-" * 40)
 
@@ -93,7 +86,6 @@ class ServiceManager:
         print("📚 API documentation available at each service /health endpoint")
 
     def wait_for_shutdown(self):
-        """Wait for shutdown signal"""
         print("\n⌨️  Press Ctrl+C to stop all services")
 
         def signal_handler(sig, frame):
@@ -104,9 +96,7 @@ class ServiceManager:
         signal.signal(signal.SIGINT, signal_handler)
 
         try:
-            # Keep script running
             while True:
-                # Check that processes are still running
                 running_processes = []
                 for process in self.processes:
                     if process.poll() is None:
@@ -126,13 +116,11 @@ class ServiceManager:
             pass
 
     def stop_all_services(self):
-        """Stop all services"""
         for i, process in enumerate(self.processes):
             if process.poll() is None:
                 print(f"   Stopping service {i+1}...")
                 process.terminate()
 
-                # Give time for graceful shutdown
                 try:
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
@@ -142,7 +130,6 @@ class ServiceManager:
         print("✅ All services have been stopped")
 
     def check_dependencies(self) -> bool:
-        """Check system dependencies"""
         try:
             import flask
             import flask_cors
@@ -157,18 +144,15 @@ class ServiceManager:
 
 
 def main():
-    """Main function"""
     print("🎓 SOA Academic Information System")
     print("   Service Oriented Architecture with Flask")
     print()
 
     manager = ServiceManager()
 
-    # Check dependencies
     if not manager.check_dependencies():
         sys.exit(1)
 
-    # Start services
     manager.start_all_services()
 
 

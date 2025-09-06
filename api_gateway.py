@@ -1,23 +1,16 @@
-"""
-API Gateway / Orchestrator - SOA Implementation
-Main application that orchestrates all services and provides a unified interface
-"""
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_cors import CORS
 import requests
 import logging
 from datetime import datetime
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create Flask app
 app = Flask(__name__)
 app.secret_key = 'soa_academic_system_2024'
 CORS(app)
 
-# Service URLs
 SERVICES = {
     'students': 'http://localhost:5001',
     'courses': 'http://localhost:5002',
@@ -25,7 +18,6 @@ SERVICES = {
 }
 
 def check_services():
-    """Check if all services are available"""
     services_status = {}
     for name, url in SERVICES.items():
         try:
@@ -36,7 +28,6 @@ def check_services():
     return services_status
 
 def make_service_request(service, endpoint, method='GET', data=None):
-    """Make a request to a service"""
     try:
         url = f"{SERVICES[service]}{endpoint}"
 
@@ -52,17 +43,14 @@ def make_service_request(service, endpoint, method='GET', data=None):
         logger.error(f"Service request failed to {service}: {str(e)}")
         return None
 
-# WEB INTERFACE ROUTES
 
 @app.route('/')
 def index():
-    """Main page"""
     services_status = check_services()
     return render_template('index.html', services=services_status)
 
 @app.route('/estudiantes')
 def estudiantes():
-    """Students management page"""
     response = make_service_request('students', '/students')
     students_data = []
 
@@ -73,7 +61,6 @@ def estudiantes():
 
 @app.route('/cursos')
 def cursos():
-    """Courses page"""
     response = make_service_request('courses', '/courses')
     courses_data = []
 
@@ -84,20 +71,16 @@ def cursos():
 
 @app.route('/matriculas')
 def matriculas():
-    """Enrollments management page"""
-    # Get all enrollments
     response = make_service_request('enrollments', '/enrollments')
     enrollments_data = []
     if response and response.status_code == 200:
         enrollments_data = response.json().get('enrollments', [])
 
-    # Get students for form
     response_students = make_service_request('students', '/students')
     students_data = []
     if response_students and response_students.status_code == 200:
         students_data = response_students.json().get('students', [])
 
-    # Get available courses
     response_courses = make_service_request('courses', '/courses/available')
     courses_data = []
     if response_courses and response_courses.status_code == 200:
@@ -108,11 +91,9 @@ def matriculas():
                          students=students_data,
                          courses=courses_data)
 
-# API PROXY ROUTES (Gateway functionality)
 
 @app.route('/api/students', methods=['GET', 'POST'])
 def api_students():
-    """Proxy for students service"""
     if request.method == 'GET':
         response = make_service_request('students', '/students')
     else:  # POST
@@ -126,7 +107,6 @@ def api_students():
 
 @app.route('/api/students/<int:student_id>', methods=['GET'])
 def api_get_student(student_id):
-    """Proxy for getting specific student"""
     response = make_service_request('students', f'/students/{student_id}')
 
     if response:
@@ -136,7 +116,6 @@ def api_get_student(student_id):
 
 @app.route('/api/courses', methods=['GET'])
 def api_courses():
-    """Proxy for courses service"""
     response = make_service_request('courses', '/courses')
 
     if response:
@@ -146,7 +125,6 @@ def api_courses():
 
 @app.route('/api/courses/<string:course_code>', methods=['GET'])
 def api_get_course(course_code):
-    """Proxy for getting specific course"""
     response = make_service_request('courses', f'/courses/{course_code}')
 
     if response:
@@ -156,7 +134,6 @@ def api_get_course(course_code):
 
 @app.route('/api/enrollments', methods=['GET', 'POST'])
 def api_enrollments():
-    """Proxy for enrollments service"""
     if request.method == 'GET':
         response = make_service_request('enrollments', '/enrollments')
     else:  # POST
@@ -170,7 +147,6 @@ def api_enrollments():
 
 @app.route('/api/enrollments/<int:student_id>', methods=['GET'])
 def api_get_student_enrollments(student_id):
-    """Proxy for getting student enrollments"""
     response = make_service_request('enrollments', f'/enrollments/{student_id}')
 
     if response:
@@ -180,7 +156,6 @@ def api_get_student_enrollments(student_id):
 
 @app.route('/api/enrollments/<int:enrollment_id>/cancel', methods=['PUT'])
 def api_cancel_enrollment(enrollment_id):
-    """Proxy for cancelling enrollment"""
     response = make_service_request('enrollments', f'/enrollments/{enrollment_id}/cancel', 'PUT')
 
     if response:
@@ -190,7 +165,6 @@ def api_cancel_enrollment(enrollment_id):
 
 @app.route('/api/enrollments/available-combinations', methods=['GET'])
 def api_available_combinations():
-    """Proxy for getting available enrollment combinations"""
     response = make_service_request('enrollments', '/enrollments/available-combinations')
 
     if response:
@@ -200,29 +174,23 @@ def api_available_combinations():
 
 @app.route('/api/services/status')
 def api_services_status():
-    """Get status of all services"""
     return jsonify(check_services())
 
-# COMPOSITE OPERATIONS (Orchestration)
 
 @app.route('/api/student-profile/<int:student_id>')
 def api_student_profile(student_id):
-    """Get complete student profile with enrollments"""
     try:
-        # Get student data
         student_response = make_service_request('students', f'/students/{student_id}')
         if not student_response or student_response.status_code != 200:
             return jsonify({'error': 'Student not found'}), 404
 
         student_data = student_response.json().get('student')
 
-        # Get student enrollments
         enrollments_response = make_service_request('enrollments', f'/enrollments/{student_id}')
         enrollments_data = []
         if enrollments_response and enrollments_response.status_code == 200:
             enrollments_data = enrollments_response.json().get('enrollments', [])
 
-        # Compose complete profile
         profile = {
             'student': student_data,
             'enrollments': enrollments_data,
@@ -238,22 +206,18 @@ def api_student_profile(student_id):
 
 @app.route('/api/course-details/<string:course_code>')
 def api_course_details(course_code):
-    """Get complete course details with enrollment information"""
     try:
-        # Get course data
         course_response = make_service_request('courses', f'/courses/{course_code}')
         if not course_response or course_response.status_code != 200:
             return jsonify({'error': 'Course not found'}), 404
 
         course_data = course_response.json().get('course')
 
-        # Get course enrollments
         enrollments_response = make_service_request('enrollments', f'/enrollments/course/{course_code}')
         enrollments_data = []
         if enrollments_response and enrollments_response.status_code == 200:
             enrollments_data = enrollments_response.json().get('enrollments', [])
 
-        # Compose complete details
         details = {
             'course': course_data,
             'enrollments': enrollments_data,
@@ -267,7 +231,6 @@ def api_course_details(course_code):
         logger.error(f"Error getting course details: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
-# ERROR HANDLERS
 
 @app.errorhandler(404)
 def not_found(error):
