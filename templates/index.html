@@ -1,0 +1,296 @@
+{% extends "base.html" %} {% block title %}Inicio - Sistema Académico SOA{%
+endblock %} {% block content %}
+<div class="hero-section">
+  <div class="text-center">
+    <h1 class="hero-title">Sistema de Información Académica</h1>
+    <p class="hero-subtitle">
+      Arquitectura Orientada a Servicios (SOA) para gestión académica moderna
+    </p>
+  </div>
+</div>
+
+<!-- Services Overview -->
+<div class="grid grid-cols-1 grid-cols-3 gap-6 mb-5">
+  <div class="card service-card">
+    <div class="card-body text-center">
+      <div class="service-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <h3 class="mb-3">Gestión de Estudiantes</h3>
+      <p class="text-secondary mb-4">
+        Registro, consulta y administración completa de información estudiantil
+      </p>
+      <div class="mb-3">
+        <span
+          class="badge badge-{{ 'success' if services.students else 'danger' }}"
+        >
+          <i
+            class="bi bi-{{ 'check-circle' if services.students else 'x-circle' }}"
+          ></i>
+          {{ 'Servicio Activo' if services.students else 'Servicio Inactivo' }}
+        </span>
+      </div>
+      <a href="{{ url_for('estudiantes') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-right"></i>
+        Acceder al Servicio
+      </a>
+    </div>
+  </div>
+
+  <div class="card service-card">
+    <div class="card-body text-center">
+      <div class="service-icon">
+        <i class="bi bi-book"></i>
+      </div>
+      <h3 class="mb-3">Catálogo de Cursos</h3>
+      <p class="text-secondary mb-4">
+        Consulta de oferta académica, horarios y disponibilidad de cupos
+      </p>
+      <div class="mb-3">
+        <span
+          class="badge badge-{{ 'success' if services.courses else 'danger' }}"
+        >
+          <i
+            class="bi bi-{{ 'check-circle' if services.courses else 'x-circle' }}"
+          ></i>
+          {{ 'Servicio Activo' if services.courses else 'Servicio Inactivo' }}
+        </span>
+      </div>
+      <a href="{{ url_for('cursos') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-right"></i>
+        Ver Cursos Disponibles
+      </a>
+    </div>
+  </div>
+
+  <div class="card service-card">
+    <div class="card-body text-center">
+      <div class="service-icon">
+        <i class="bi bi-clipboard-check"></i>
+      </div>
+      <h3 class="mb-3">Sistema de Matrículas</h3>
+      <p class="text-secondary mb-4">
+        Gestión integral de inscripciones y matrículas estudiantiles
+      </p>
+      <div class="mb-3">
+        <span
+          class="badge badge-{{ 'success' if services.enrollments else 'danger' }}"
+        >
+          <i
+            class="bi bi-{{ 'check-circle' if services.enrollments else 'x-circle' }}"
+          ></i>
+          {{ 'Servicio Activo' if services.enrollments else 'Servicio Inactivo'
+          }}
+        </span>
+      </div>
+      <a href="{{ url_for('matriculas') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-right"></i>
+        Gestionar Matrículas
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- System Statistics -->
+<div class="grid grid-cols-1 grid-cols-3 gap-6 mb-5">
+  <div class="card stats-card">
+    <div class="card-body text-center">
+      <div class="stats-icon">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="stats-number" id="total-students">--</div>
+      <div class="stats-label">Estudiantes Registrados</div>
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card-body text-center">
+      <div class="stats-icon">
+        <i class="bi bi-book-fill"></i>
+      </div>
+      <div class="stats-number" id="total-courses">--</div>
+      <div class="stats-label">Cursos Disponibles</div>
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card-body text-center">
+      <div class="stats-icon">
+        <i class="bi bi-clipboard-check-fill"></i>
+      </div>
+      <div class="stats-number" id="total-enrollments">--</div>
+      <div class="stats-label">Matrículas Activas</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hero-section {
+    background: linear-gradient(
+      135deg,
+      var(--primary) 0%,
+      var(--primary-dark) 100%
+    );
+    color: white;
+    padding: 4rem 2rem;
+    margin: -2rem -1.5rem 3rem -1.5rem;
+    border-radius: 0 0 24px 24px;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    font-weight: 300;
+  }
+
+  .service-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--info));
+  }
+
+  .service-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 2rem;
+  }
+
+  .stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+  }
+
+  .stats-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+  }
+
+  .stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+
+  .feature-item {
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .feature-item h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--dark);
+  }
+
+  .feature-item p {
+    color: var(--secondary);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 2rem 1rem;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+    }
+
+    .grid-cols-3 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .grid-cols-2 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+</style>
+{% endblock %} {% block scripts %}
+<script>
+  // Load system statistics
+  async function loadStatistics() {
+    try {
+      // Load students count
+      const studentsResponse = await fetch('/api/students');
+      if (studentsResponse.ok) {
+        const studentsData = await studentsResponse.json();
+        document.getElementById('total-students').textContent =
+          studentsData.total || 0;
+      }
+
+      // Load courses count
+      const coursesResponse = await fetch('/api/courses');
+      if (coursesResponse.ok) {
+        const coursesData = await coursesResponse.json();
+        document.getElementById('total-courses').textContent =
+          coursesData.total || 0;
+      }
+
+      // Load enrollments count
+      const enrollmentsResponse = await fetch('/api/enrollments');
+      if (enrollmentsResponse.ok) {
+        const enrollmentsData = await enrollmentsResponse.json();
+        document.getElementById('total-enrollments').textContent =
+          enrollmentsData.total || 0;
+      }
+    } catch (error) {
+      console.error('Error loading statistics:', error);
+      document.getElementById('total-students').textContent = '0';
+      document.getElementById('total-courses').textContent = '0';
+      document.getElementById('total-enrollments').textContent = '0';
+    }
+  }
+
+  // Load statistics on page load
+  document.addEventListener('DOMContentLoaded', loadStatistics);
+</script>
+{% endblock %}

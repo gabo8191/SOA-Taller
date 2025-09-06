@@ -1,0 +1,754 @@
+{% extends "base.html" %} {% block title %}Cursos - Sistema Académico SOA{%
+endblock %} {% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-book"></i> Catálogo de Cursos</h1>
+  <p>Consulta de oferta académica y disponibilidad de cupos</p>
+</div>
+
+<div class="grid grid-cols-1 grid-cols-3 gap-6 mb-5">
+  <!-- Search and Filters -->
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="bi bi-funnel"></i> Filtros de Búsqueda</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label for="searchCourses" class="form-label">Buscar Curso</label>
+        <input
+          type="text"
+          class="form-control"
+          id="searchCourses"
+          placeholder="Nombre o código del curso"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="filterInstructor" class="form-label">Instructor</label>
+        <select class="form-control" id="filterInstructor">
+          <option value="">Todos los instructores</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="filterAvailability" class="form-label"
+          >Disponibilidad</label
+        >
+        <select class="form-control" id="filterAvailability">
+          <option value="">Todos los cursos</option>
+          <option value="available">Solo con cupos disponibles</option>
+          <option value="full">Sin cupos disponibles</option>
+        </select>
+      </div>
+
+      <div class="flex gap-4">
+        <button onclick="applyFilters()" class="btn btn-primary">
+          <i class="bi bi-search"></i>
+          Filtrar
+        </button>
+        <button onclick="clearFilters()" class="btn btn-secondary">
+          <i class="bi bi-x-circle"></i>
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="card stats-card">
+    <div class="card-body text-center">
+      <div class="stats-icon">
+        <i class="bi bi-book-fill"></i>
+      </div>
+      <div class="stats-number" id="totalCourses">0</div>
+      <div class="stats-label">Total de Cursos</div>
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card-body text-center">
+      <div class="stats-icon">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <div class="stats-number" id="availableCourses">0</div>
+      <div class="stats-label">Con Cupos Disponibles</div>
+    </div>
+  </div>
+</div>
+
+<!-- Courses Grid -->
+<div class="card">
+  <div class="card-header">
+    <h2><i class="bi bi-grid"></i> Cursos Disponibles</h2>
+  </div>
+  <div class="card-body">
+    <div id="coursesLoading" class="text-center hidden">
+      <div class="loading"></div>
+      <p>Cargando cursos...</p>
+    </div>
+
+    <div id="coursesGrid" class="courses-grid">
+      <!-- Courses will be loaded here -->
+    </div>
+
+    <div id="noCourses" class="text-center hidden">
+      <div class="empty-state">
+        <i class="bi bi-book"></i>
+        <h3>No se encontraron cursos</h3>
+        <p>No hay cursos que coincidan con los filtros seleccionados.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Course Detail Modal -->
+<div id="courseModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="bi bi-book"></i> Detalles del Curso</h2>
+      <button onclick="closeCourseModal()" class="btn btn-secondary btn-sm">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="courseModalBody">
+      <!-- Course details will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<style>
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header p {
+    color: var(--secondary);
+    font-size: 1.125rem;
+  }
+
+  .stats-card {
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+    border: none;
+  }
+
+  .stats-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+  }
+
+  .stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .course-card {
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .course-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .course-card.available::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--success);
+  }
+
+  .course-card.full::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--danger);
+  }
+
+  .course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .course-code {
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .course-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .course-instructor {
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .course-details {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .course-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--secondary);
+    font-size: 0.875rem;
+  }
+
+  .course-slots {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--light);
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+
+  .slots-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .slots-progress {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0 1rem;
+  }
+
+  .slots-progress-bar {
+    height: 100%;
+    background: var(--success);
+    transition: width 0.3s ease;
+  }
+
+  .slots-progress-bar.danger {
+    background: var(--danger);
+  }
+
+  .course-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .course-actions .btn {
+    width: 100%;
+  }
+
+  .empty-state {
+    padding: 3rem 1rem;
+    color: var(--secondary);
+  }
+
+  .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal.hidden {
+    display: none !important;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .grid-cols-3 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .courses-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+</style>
+{% endblock %} {% block scripts %}
+<script>
+  let allCourses = [];
+  let filteredCourses = [];
+
+  // Load all courses
+  async function loadCourses() {
+    showCoursesLoading();
+
+    try {
+      const response = await fetch('/api/courses');
+      const data = await response.json();
+
+      if (response.ok) {
+        allCourses = data.courses || [];
+        filteredCourses = [...allCourses];
+        displayCourses(filteredCourses);
+        updateStatistics();
+        populateInstructorFilter();
+      } else {
+        showAlert('Error al cargar cursos', 'danger');
+        displayNoCourses();
+      }
+    } catch (error) {
+      showAlert('Error de conexión con el servicio de cursos', 'danger');
+      displayNoCourses();
+    } finally {
+      hideCoursesLoading();
+    }
+  }
+
+  // Display courses
+  function displayCourses(courses) {
+    const grid = document.getElementById('coursesGrid');
+
+    if (!courses || courses.length === 0) {
+      displayNoCourses();
+      return;
+    }
+
+    grid.innerHTML = courses
+      .map((course) => {
+        const availabilityClass =
+          course.available_slots > 0 ? 'available' : 'full';
+        const progressPercentage =
+          ((course.total_slots - course.available_slots) / course.total_slots) *
+          100;
+        const progressClass = course.available_slots === 0 ? 'danger' : '';
+
+        return `
+                <div class="course-card ${availabilityClass}">
+                    <div class="course-header">
+                        <div class="course-code">${course.code}</div>
+                        <span class="badge badge-${
+                          course.available_slots > 0 ? 'success' : 'danger'
+                        }">
+                            ${
+                              course.available_slots > 0
+                                ? 'Disponible'
+                                : 'Sin cupos'
+                            }
+                        </span>
+                    </div>
+
+                    <h3 class="course-title">${course.name}</h3>
+
+                    <div class="course-instructor">
+                        <i class="bi bi-person"></i>
+                        ${course.instructor}
+                    </div>
+
+                    <div class="course-details">
+                        <div class="course-detail">
+                            <i class="bi bi-award"></i>
+                            ${course.credits} créditos
+                        </div>
+                        <div class="course-detail">
+                            <i class="bi bi-clock"></i>
+                            ${course.schedule}
+                        </div>
+                    </div>
+
+                    <div class="course-slots">
+                        <div class="slots-info">
+                            <i class="bi bi-people"></i>
+                            <span>${course.available_slots}/${
+          course.total_slots
+        }</span>
+                        </div>
+                        <div class="slots-progress">
+                            <div class="slots-progress-bar ${progressClass}" style="width: ${progressPercentage}%"></div>
+                        </div>
+                        <span class="text-sm">${Math.round(
+                          progressPercentage,
+                        )}% ocupado</span>
+                    </div>
+
+                    <div class="course-actions">
+                        <button onclick="event.stopPropagation(); viewCourse('${
+                          course.code
+                        }')" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i>
+                            Ver Detalles
+                        </button>
+                    </div>
+                </div>
+            `;
+      })
+      .join('');
+
+    document.getElementById('coursesGrid').classList.remove('hidden');
+    document.getElementById('noCourses').classList.add('hidden');
+  }
+
+  // Display no courses message
+  function displayNoCourses() {
+    document.getElementById('coursesGrid').classList.add('hidden');
+    document.getElementById('noCourses').classList.remove('hidden');
+  }
+
+  // Show/hide loading
+  function showCoursesLoading() {
+    document.getElementById('coursesLoading').classList.remove('hidden');
+    document.getElementById('coursesGrid').classList.add('hidden');
+    document.getElementById('noCourses').classList.add('hidden');
+  }
+
+  function hideCoursesLoading() {
+    document.getElementById('coursesLoading').classList.add('hidden');
+  }
+
+  // Update statistics
+  function updateStatistics() {
+    const totalCourses = allCourses.length;
+    const availableCourses = allCourses.filter(
+      (course) => course.available_slots > 0,
+    ).length;
+
+    document.getElementById('totalCourses').textContent = totalCourses;
+    document.getElementById('availableCourses').textContent = availableCourses;
+  }
+
+  // Populate instructor filter
+  function populateInstructorFilter() {
+    const instructors = [
+      ...new Set(allCourses.map((course) => course.instructor)),
+    ];
+    const select = document.getElementById('filterInstructor');
+
+    select.innerHTML =
+      '<option value="">Todos los instructores</option>' +
+      instructors
+        .map(
+          (instructor) =>
+            `<option value="${instructor}">${instructor}</option>`,
+        )
+        .join('');
+  }
+
+  // Apply filters
+  function applyFilters() {
+    const searchTerm = document
+      .getElementById('searchCourses')
+      .value.toLowerCase()
+      .trim();
+    const selectedInstructor =
+      document.getElementById('filterInstructor').value;
+    const availabilityFilter =
+      document.getElementById('filterAvailability').value;
+
+    filteredCourses = allCourses.filter((course) => {
+      // Search filter
+      const matchesSearch =
+        !searchTerm ||
+        course.name.toLowerCase().includes(searchTerm) ||
+        course.code.toLowerCase().includes(searchTerm);
+
+      // Instructor filter
+      const matchesInstructor =
+        !selectedInstructor || course.instructor === selectedInstructor;
+
+      // Availability filter
+      let matchesAvailability = true;
+      if (availabilityFilter === 'available') {
+        matchesAvailability = course.available_slots > 0;
+      } else if (availabilityFilter === 'full') {
+        matchesAvailability = course.available_slots === 0;
+      }
+
+      return matchesSearch && matchesInstructor && matchesAvailability;
+    });
+
+    displayCourses(filteredCourses);
+  }
+
+  // Clear filters
+  function clearFilters() {
+    document.getElementById('searchCourses').value = '';
+    document.getElementById('filterInstructor').value = '';
+    document.getElementById('filterAvailability').value = '';
+    filteredCourses = [...allCourses];
+    displayCourses(filteredCourses);
+  }
+
+  // View course details
+  async function viewCourse(courseCode) {
+    // Prevent accidental calls
+    if (!courseCode) {
+      console.warn('viewCourse called without courseCode');
+      return;
+    }
+
+    console.log('viewCourse called with:', courseCode);
+
+    try {
+      const response = await fetch(`/api/courses/${courseCode}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        const course = data.course;
+        const progressPercentage =
+          ((course.total_slots - course.available_slots) / course.total_slots) *
+          100;
+
+        document.getElementById('courseModalBody').innerHTML = `
+                    <div class="course-detail-grid">
+                        <div class="course-detail">
+                            <label>Código:</label>
+                            <span class="course-code-badge">${
+                              course.code
+                            }</span>
+                        </div>
+                        <div class="course-detail">
+                            <label>Nombre:</label>
+                            <span>${course.name}</span>
+                        </div>
+                        <div class="course-detail">
+                            <label>Instructor:</label>
+                            <span>${course.instructor}</span>
+                        </div>
+                        <div class="course-detail">
+                            <label>Créditos:</label>
+                            <span>${course.credits}</span>
+                        </div>
+                        <div class="course-detail">
+                            <label>Horario:</label>
+                            <span>${course.schedule}</span>
+                        </div>
+                        <div class="course-detail">
+                            <label>Cupos Disponibles:</label>
+                            <span class="badge badge-${
+                              course.available_slots > 0 ? 'success' : 'danger'
+                            }">
+                                ${course.available_slots} de ${
+          course.total_slots
+        }
+                            </span>
+                        </div>
+                        <div class="course-detail">
+                            <label>Estado:</label>
+                            <span class="badge badge-${
+                              course.available_slots > 0 ? 'success' : 'danger'
+                            }">
+                                ${
+                                  course.available_slots > 0
+                                    ? 'Disponible para matrícula'
+                                    : 'Sin cupos disponibles'
+                                }
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="course-progress-section">
+                        <label>Ocupación del Curso:</label>
+                        <div class="slots-progress">
+                            <div class="slots-progress-bar ${
+                              course.available_slots === 0 ? 'danger' : ''
+                            }"
+                                 style="width: ${progressPercentage}%"></div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small>${Math.round(
+                              progressPercentage,
+                            )}% ocupado</small>
+                        </div>
+                    </div>
+                `;
+
+        document.getElementById('courseModal').classList.remove('hidden');
+      } else {
+        showAlert('Error al cargar detalles del curso', 'danger');
+      }
+    } catch (error) {
+      showAlert('Error de conexión', 'danger');
+    }
+  }
+
+  // Close course modal
+  function closeCourseModal() {
+    const modal = document.getElementById('courseModal');
+    modal.classList.add('hidden');
+    // Clear modal content to prevent issues
+    document.getElementById('courseModalBody').innerHTML = '';
+  }
+
+  // Close modal when clicking outside
+  document
+    .getElementById('courseModal')
+    .addEventListener('click', function (e) {
+      if (e.target === this) {
+        closeCourseModal();
+      }
+    });
+
+  // Search on enter
+  document
+    .getElementById('searchCourses')
+    .addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+
+  // Initialize page
+  function initializePage() {
+    // Ensure modal is hidden and clear any content
+    const modal = document.getElementById('courseModal');
+    modal.classList.add('hidden');
+    document.getElementById('courseModalBody').innerHTML = '';
+
+    // Debug: log modal state
+    console.log(
+      'Modal initialized as hidden:',
+      modal.classList.contains('hidden'),
+    );
+
+    // Load courses
+    loadCourses();
+  }
+
+  // Load courses on page load
+  document.addEventListener('DOMContentLoaded', function () {
+    initializePage();
+  });
+</script>
+
+<style>
+  .course-detail-grid {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .course-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--light);
+    border-radius: 8px;
+  }
+
+  .course-detail label {
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  .course-detail span {
+    color: var(--secondary);
+  }
+
+  .course-code-badge {
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .course-progress-section {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+
+  .course-progress-section label {
+    font-weight: 600;
+    color: var(--dark);
+    display: block;
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}

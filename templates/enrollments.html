@@ -1,0 +1,341 @@
+{% extends "base.html" %} {% block title %}Matrículas - Sistema Académico SOA{%
+endblock %} {% block content %}
+<div class="page-header">
+  <h1><i class="bi bi-clipboard-check"></i> Sistema de Matrículas</h1>
+  <p>Gestión integral de inscripciones y matrículas estudiantiles</p>
+</div>
+
+<div class="grid grid-cols-1 grid-cols-2 gap-6 mb-5">
+  <!-- Nueva Matrícula -->
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="bi bi-plus-circle"></i> Nueva Matrícula</h2>
+    </div>
+    <div class="card-body">
+      <form id="enrollmentForm">
+        <div class="form-group">
+          <label for="studentId" class="form-label">ID del Estudiante</label>
+          <input
+            type="number"
+            class="form-control"
+            id="studentId"
+            required
+            placeholder="Ingrese el ID del estudiante"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="courseCode" class="form-label">Código del Curso</label>
+          <input
+            type="text"
+            class="form-control"
+            id="courseCode"
+            required
+            placeholder="Ej: CS001"
+            style="text-transform: uppercase"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full">
+          <i class="bi bi-check-circle"></i>
+          Realizar Matrícula
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="bi bi-bar-chart"></i> Estadísticas</h2>
+    </div>
+    <div class="card-body">
+      <div class="stats-summary">
+        <div class="stat-item">
+          <div class="stat-number" id="totalEnrollments">0</div>
+          <div class="stat-label">Matrículas Activas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lista de Matrículas -->
+<div class="card">
+  <div class="card-header">
+    <div class="flex justify-between items-center">
+      <h2><i class="bi bi-list"></i> Lista de Matrículas</h2>
+      <button onclick="loadAllEnrollments()" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-clockwise"></i>
+        Actualizar
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div id="enrollmentsLoading" class="text-center hidden">
+      <div class="loading"></div>
+      <p>Cargando matrículas...</p>
+    </div>
+
+    <div id="enrollmentsTable" class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Estudiante</th>
+            <th>Curso</th>
+            <th>Estado</th>
+            <th>Fecha de Matrícula</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="enrollmentsTableBody">
+          <!-- Matrículas se cargarán aquí -->
+        </tbody>
+      </table>
+    </div>
+
+    <div id="noEnrollments" class="text-center hidden">
+      <div class="empty-state">
+        <i class="bi bi-clipboard-x"></i>
+        <h3>No hay matrículas registradas</h3>
+        <p>Comience creando la primera matrícula.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header p {
+    color: var(--secondary);
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+  }
+
+  .stats-summary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 12px;
+    padding: 2rem;
+    color: white;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  .empty-state {
+    padding: 3rem 1rem;
+    color: var(--secondary);
+  }
+
+  .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+</style>
+{% endblock %} {% block scripts %}
+<script>
+  let allEnrollments = [];
+
+  // Envío del formulario
+  document
+    .getElementById('enrollmentForm')
+    .addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      showLoading(submitBtn);
+
+      const formData = {
+        student_id: parseInt(document.getElementById('studentId').value),
+        course_code: document.getElementById('courseCode').value.toUpperCase(),
+      };
+
+      try {
+        const response = await fetch('/api/enrollments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showAlert('Matrícula realizada exitosamente', 'success');
+          document.getElementById('enrollmentForm').reset();
+          loadAllEnrollments();
+        } else {
+          showAlert(data.error || 'Error al realizar matrícula', 'danger');
+        }
+      } catch (error) {
+        showAlert(
+          'Error de conexión. Verifique que los servicios estén activos.',
+          'danger',
+        );
+      } finally {
+        hideLoading(submitBtn, originalText);
+      }
+    });
+
+  // Cargar todas las matrículas
+  async function loadAllEnrollments() {
+    showEnrollmentsLoading();
+
+    try {
+      const response = await fetch('/api/enrollments');
+      const data = await response.json();
+
+      if (response.ok) {
+        allEnrollments = data.enrollments || [];
+        displayEnrollments(allEnrollments);
+        updateStatistics();
+      } else {
+        showAlert('Error al cargar matrículas', 'danger');
+        displayNoEnrollments();
+      }
+    } catch (error) {
+      showAlert('Error de conexión con el servicio de matrículas', 'danger');
+      displayNoEnrollments();
+    } finally {
+      hideEnrollmentsLoading();
+    }
+  }
+
+  // Mostrar matrículas en tabla
+  function displayEnrollments(enrollments) {
+    const tbody = document.getElementById('enrollmentsTableBody');
+
+    if (!enrollments || enrollments.length === 0) {
+      displayNoEnrollments();
+      return;
+    }
+
+    tbody.innerHTML = enrollments
+      .map((enrollment) => {
+        const statusBadge =
+          enrollment.status === 'ACTIVE' ? 'success' : 'danger';
+        const statusText =
+          enrollment.status === 'ACTIVE' ? 'Activa' : 'Cancelada';
+
+        return `
+                <tr>
+                    <td>${enrollment.id}</td>
+                    <td>
+                        <strong>${
+                          enrollment.student ? enrollment.student.name : 'N/A'
+                        }</strong>
+                        <br><small>${
+                          enrollment.student
+                            ? enrollment.student.identification
+                            : 'N/A'
+                        }</small>
+                    </td>
+                    <td>
+                        <strong>${enrollment.course_code}</strong>
+                        <br><small>${
+                          enrollment.course ? enrollment.course.name : 'N/A'
+                        }</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-${statusBadge}">${statusText}</span>
+                    </td>
+                    <td>${formatDate(enrollment.enrollment_date)}</td>
+                    <td>
+                        <button onclick="viewEnrollment(${
+                          enrollment.id
+                        })" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+      })
+      .join('');
+
+    document.getElementById('enrollmentsTable').classList.remove('hidden');
+    document.getElementById('noEnrollments').classList.add('hidden');
+  }
+
+  // Mostrar mensaje de no matrículas
+  function displayNoEnrollments() {
+    document.getElementById('enrollmentsTable').classList.add('hidden');
+    document.getElementById('noEnrollments').classList.remove('hidden');
+  }
+
+  // Mostrar/ocultar carga
+  function showEnrollmentsLoading() {
+    document.getElementById('enrollmentsLoading').classList.remove('hidden');
+    document.getElementById('enrollmentsTable').classList.add('hidden');
+    document.getElementById('noEnrollments').classList.add('hidden');
+  }
+
+  function hideEnrollmentsLoading() {
+    document.getElementById('enrollmentsLoading').classList.add('hidden');
+  }
+
+  // Actualizar estadísticas
+  function updateStatistics() {
+    const activeEnrollments = allEnrollments.filter(
+      (e) => e.status === 'ACTIVE',
+    ).length;
+    document.getElementById('totalEnrollments').textContent = activeEnrollments;
+  }
+
+  // Ver detalles de matrícula
+  function viewEnrollment(enrollmentId) {
+    const enrollment = allEnrollments.find((e) => e.id === enrollmentId);
+    if (!enrollment) return;
+
+    const details = `
+            ID: ${enrollment.id}
+            Estudiante: ${enrollment.student ? enrollment.student.name : 'N/A'}
+            Curso: ${enrollment.course_code}
+            Estado: ${enrollment.status}
+            Fecha: ${formatDate(enrollment.enrollment_date)}
+        `;
+
+    alert(details);
+  }
+
+  // Formatear fecha
+  function formatDate(dateString) {
+    if (!dateString) return 'No disponible';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  // Cargar datos al cargar la página
+  document.addEventListener('DOMContentLoaded', function () {
+    loadAllEnrollments();
+  });
+</script>
+{% endblock %}
